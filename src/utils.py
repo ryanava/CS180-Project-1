@@ -2,7 +2,7 @@
 import numpy as np
 from skimage.transform import rescale
 
-def naive_align(type_of_alignment, input, anchor, search_area):
+def naive_align(input, anchor, search_area, type_of_alignment):
     #dont accept non strings
     if not isinstance(type_of_alignment, str):
         return TypeError

@@ -11,6 +11,8 @@ imname = input("Enter the path to the image file (e.g., emir.tif or cathedral.jp
 imname = os.path.join("images", imname)
 search_area = int(input("Enter search area size (e.g., 50 or 100): ").strip())
 naive_search_algorithm = input("Enter the type of naive search (euclidean or ncc): ").strip()
+naive_or_pyramid = input("Enter the implementation you want (e.g., naive or pyramid): ").strip()
+alignment_color = input("Enter the plate color you want to align your 3 plates to (e.g., red or green or blue: ").strip()
 
 # read in the image
 im = cv2.imread(imname)
@@ -26,20 +28,34 @@ b = im[:height, :, 0]
 g = im[height: 2*height, :, 0]
 r = im[2*height: 3*height, :, 0]
 
+#order of input tuple doesnt matter
+if (alignment_color.lower() =="green"):
+    input = (b, r)
+    anchor = g
+elif (alignment_color.lower() =="red"):
+    input = (b, g)
+    anchor = r
+elif (alignment_color.lower() =="blue"):
+    input = (g, r)
+    anchor = b
+
 # aligned green
-ab = utils.pyramid_align(b, g, search_area, naive_search_algorithm)
-ar = utils.pyramid_align(r, g, search_area, naive_search_algorithm)
-im_out_color = np.dstack([ar, g, ab])
+if (naive_or_pyramid.lower() == "naive"):
+    first_aligned = utils.naive_align(input[0], anchor, search_area, naive_search_algorithm)
+    second_aligned = utils.naive_align(input[1], anchor, search_area, naive_search_algorithm)
+elif (naive_or_pyramid.lower() == "pyramid"):
+    first_aligned = utils.pyramid_align(input[0], anchor, search_area, naive_search_algorithm)
+    second_aligned = utils.pyramid_align(input[1], anchor, search_area, naive_search_algorithm)
 
-#aligned blue
-#ag = utils.pyramid_align(g, b, 100)
-#ar = utils.pyramid_align(r, b, 100)
-#im_out_color = np.dstack([ar, ag, b])
+#no real way to make this look sensical
+if (alignment_color.lower() =="green"):
+    im_out_color = np.dstack([second_aligned, anchor, first_aligned])
+elif (alignment_color.lower() =="red"):
+    im_out_color = np.dstack([anchor, second_aligned, first_aligned])
+elif (alignment_color.lower() =="blue"):
+    im_out_color = np.dstack([second_aligned, first_aligned, anchor])
 
-#aligned red
-#ag = utils.pyramid_align(g, r, 100)
-#ab = utils.pyramid_align(b, r, 100)
-#im_out_color = np.dstack([r, ag, ab])
+
 
 im_out_color = (im_out_color * 255).astype(np.uint8)
 
